@@ -54,8 +54,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input_file = matches.value_of("input").unwrap();
     let output_file = matches.value_of("output").unwrap();
     translate_file(input_file, output_file).await?;
-    fs::rename("target/release/my_binary", "target/release/new_name").unwrap();
-
     Ok(())
 }
 
