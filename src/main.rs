@@ -2,7 +2,6 @@ use clap::{ App, Arg };
 use reqwest::Client;
 use serde_json::{ json, Value };
 use std::fs::File;
-use std::fs;
 use std::io::{ BufReader, BufRead, Write };
 use std::time::Duration;
 use tokio::time;
