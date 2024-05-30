@@ -7,21 +7,22 @@ use std::io::{ BufReader, BufRead, Write };
 use std::time::Duration;
 use tokio::time;
 use chrono::Local;
-use config::Config;
 use lazy_static::lazy_static;
+use toml;
 
 lazy_static! {
-    static ref CONFIG: Config = load_config();
+    static ref CONFIG: (String, String) = load_config().expect("Failed to load config");
 }
 
-fn load_config() -> Config {
-    let config = Config::builder()
-        .add_source(config::File::with_name("config"))
-        .add_source(config::Environment::default())
-        .build()
-        .unwrap();
-
-    config
+fn load_config() -> Result<(String, String), Box<dyn std::error::Error>> {
+    const CONF: &str = include_str!("../config.toml");
+    let config_toml: toml::Value = CONF.parse()?;
+    let api_key = config_toml["settings"]["api_key"].as_str().ok_or("Missing API key")?.to_string();
+    let endpoint = config_toml["settings"]["endpoint"]
+        .as_str()
+        .ok_or("Missing endpoint")?
+        .to_string();
+    Ok((api_key, endpoint))
 }
 
 #[tokio::main]
@@ -59,9 +60,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 async fn translate_text(message: &str) -> Result<(String, i64), Box<dyn std::error::Error>> {
-    let config = CONFIG.clone();
-    let api_key = config.get::<String>("settings.api_key")?;
-    let endpoint = config.get::<String>("settings.endpoint")?;
+    let api_key = &CONFIG.0;
+    let endpoint = &CONFIG.1;
     let client = Client::new();
 
     let request_body =
